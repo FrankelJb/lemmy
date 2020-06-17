@@ -44,13 +44,13 @@ async fn get_webfinger_response(
     };
     let community_name = match regex_parsed_flattened {
       Some(c) => c.as_str(),
-      None => return Err(format_err!("not_found")),
+      None => return Err(anyhow!("not_found")),
     };
 
     // Make sure the requested community exists.
     let community = match Community::read_from_name(&conn, community_name.to_string()) {
       Ok(o) => o,
-      Err(_) => return Err(format_err!("not_found")),
+      Err(_) => return Err(anyhow!("not_found")),
     };
 
     let community_url = community.get_url();

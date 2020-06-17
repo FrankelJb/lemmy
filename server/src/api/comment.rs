@@ -66,7 +66,7 @@ impl Perform for Oper<CreateComment> {
     &self,
     pool: Pool<ConnectionManager<PgConnection>>,
     websocket_info: Option<WebsocketInfo>,
-  ) -> Result<CommentResponse, Error> {
+  ) -> Result<CommentResponse, anyhow::Error> {
     let data: &CreateComment = &self.data;
 
     let claims = match Claims::decode(&data.auth) {
@@ -254,7 +254,7 @@ impl Perform for Oper<EditComment> {
     &self,
     pool: Pool<ConnectionManager<PgConnection>>,
     websocket_info: Option<WebsocketInfo>,
-  ) -> Result<CommentResponse, Error> {
+  ) -> Result<CommentResponse, anyhow::Error> {
     let data: &EditComment = &self.data;
 
     let claims = match Claims::decode(&data.auth) {
@@ -406,7 +406,7 @@ impl Perform for Oper<SaveComment> {
     &self,
     pool: Pool<ConnectionManager<PgConnection>>,
     _websocket_info: Option<WebsocketInfo>,
-  ) -> Result<CommentResponse, Error> {
+  ) -> Result<CommentResponse, anyhow::Error> {
     let data: &SaveComment = &self.data;
 
     let claims = match Claims::decode(&data.auth) {
@@ -451,7 +451,7 @@ impl Perform for Oper<CreateCommentLike> {
     &self,
     pool: Pool<ConnectionManager<PgConnection>>,
     websocket_info: Option<WebsocketInfo>,
-  ) -> Result<CommentResponse, Error> {
+  ) -> Result<CommentResponse, anyhow::Error> {
     let data: &CreateCommentLike = &self.data;
 
     let claims = match Claims::decode(&data.auth) {
@@ -550,7 +550,7 @@ impl Perform for Oper<GetComments> {
     &self,
     pool: Pool<ConnectionManager<PgConnection>>,
     websocket_info: Option<WebsocketInfo>,
-  ) -> Result<GetCommentsResponse, Error> {
+  ) -> Result<GetCommentsResponse, anyhow::Error> {
     let data: &GetComments = &self.data;
 
     let user_claims: Option<Claims> = match &data.auth {

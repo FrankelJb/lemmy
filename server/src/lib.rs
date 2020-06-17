@@ -4,11 +4,11 @@ pub extern crate strum_macros;
 #[macro_use]
 pub extern crate lazy_static;
 #[macro_use]
-pub extern crate failure;
-#[macro_use]
 pub extern crate diesel;
 pub extern crate actix;
 pub extern crate actix_web;
+#[macro_use]
+pub extern crate anyhow;
 pub extern crate bcrypt;
 pub extern crate chrono;
 pub extern crate comrak;
@@ -35,6 +35,7 @@ pub mod version;
 pub mod websocket;
 
 use actix_web::dev::ConnectionInfo;
+use anyhow::Context;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use isahc::prelude::*;
 use lettre::smtp::authentication::{Credentials, Mechanism};
@@ -73,17 +74,17 @@ pub fn is_email_regex(test: &str) -> bool {
   EMAIL_REGEX.is_match(test)
 }
 
-pub fn is_image_content_type(test: &str) -> Result<(), failure::Error> {
+pub fn is_image_content_type(test: &str) -> Result<(), anyhow::Error> {
   if isahc::get(test)?
     .headers()
     .get("Content-Type")
-    .ok_or_else(|| format_err!("No Content-Type header"))?
+    .context("No Content-Type header")?
     .to_str()?
     .starts_with("image/")
   {
     Ok(())
   } else {
-    Err(format_err!("Not an image type."))
+    bail!("Not an image type.")
   }
 }
 
@@ -180,7 +181,7 @@ pub struct IframelyResponse {
   html: Option<String>,
 }
 
-pub fn fetch_iframely(url: &str) -> Result<IframelyResponse, failure::Error> {
+pub fn fetch_iframely(url: &str) -> Result<IframelyResponse, anyhow::Error> {
   let fetch_url = format!("http://iframely/oembed?url={}", url);
   let text = isahc::get(&fetch_url)?.text()?;
   let res: IframelyResponse = serde_json::from_str(&text)?;
@@ -193,7 +194,7 @@ pub struct PictshareResponse {
   url: String,
 }
 
-pub fn fetch_pictshare(image_url: &str) -> Result<PictshareResponse, failure::Error> {
+pub fn fetch_pictshare(image_url: &str) -> Result<PictshareResponse, anyhow::Error> {
   is_image_content_type(image_url)?;
 
   let fetch_url = format!(

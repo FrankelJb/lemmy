@@ -31,9 +31,12 @@ use crate::websocket::{
   },
   WebsocketInfo,
 };
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
-use failure::Error;
+use actix_web::error::ResponseError;
+use anyhow::{Error, Result};
+use diesel::{
+  r2d2::{ConnectionManager, Pool},
+  PgConnection,
+};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -44,8 +47,7 @@ pub mod post;
 pub mod site;
 pub mod user;
 
-#[derive(Fail, Debug)]
-#[fail(display = "{{\"error\":\"{}\"}}", message)]
+#[derive(Debug)]
 pub struct APIError {
   pub message: String,
 }
@@ -57,6 +59,20 @@ impl APIError {
     }
   }
 }
+
+impl std::error::Error for APIError {
+  fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    None
+  }
+}
+
+impl std::fmt::Display for APIError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{{\"error\":\"{}\"}}", self.message)
+  }
+}
+
+impl ResponseError for APIError {}
 
 pub struct Oper<T> {
   data: T,

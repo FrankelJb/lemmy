@@ -2,9 +2,9 @@ pub mod server;
 
 use crate::ConnectionId;
 use actix::prelude::*;
+use anyhow::{Error, Result};
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::PgConnection;
-use failure::Error;
 use log::{error, info};
 use rand::{rngs::ThreadRng, Rng};
 use serde::{Deserialize, Serialize};

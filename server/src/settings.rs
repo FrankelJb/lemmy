@@ -1,5 +1,5 @@
+use anyhow::{Error, Result};
 use config::{Config, ConfigError, Environment, File};
-use failure::Error;
 use serde::Deserialize;
 use std::env;
 use std::fs;

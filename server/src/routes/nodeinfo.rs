@@ -23,7 +23,7 @@ async fn node_info(
     let conn = db.get()?;
     let site_view = match SiteView::read(&conn) {
       Ok(site_view) => site_view,
-      Err(_) => return Err(format_err!("not_found")),
+      Err(_) => return Err(anyhow!("not_found")),
     };
     let protocols = vec![];
     Ok(NodeInfo {

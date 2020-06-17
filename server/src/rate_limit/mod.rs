@@ -5,7 +5,7 @@ use crate::api::APIError;
 use crate::get_ip;
 use crate::settings::RateLimitConfig;
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform};
-use failure::Error;
+use anyhow::Error;
 use futures::future::{ok, Ready};
 use log::debug;
 use rate_limiter::{RateLimitType, RateLimiter};
@@ -55,6 +55,39 @@ impl RateLimit {
   }
 }
 
+#[derive(Debug)]
+struct MyAnyhowError(anyhow::Error);
+
+use actix_web::{HttpResponse, ResponseError};
+impl ResponseError for MyAnyhowError {
+  fn error_response(&self) -> HttpResponse {
+    HttpResponse::InternalServerError().finish()
+  }
+}
+
+impl From<APIError> for MyAnyhowError {
+  fn from(item: APIError) -> Self {
+    MyAnyhowError(anyhow::Error::msg(item.message))
+  }
+}
+
+impl From<anyhow::Error> for MyAnyhowError {
+  fn from(item: anyhow::Error) -> Self {
+    MyAnyhowError(item)
+  }
+}
+
+impl<E> From<E> for MyAnyhowError {
+  fn from(item: E) -> Self
+  where
+    E: std::error::Error + Send + Sync + 'static,
+  {
+    MyAnyhowError(Error::new(item))
+  }
+}
+
+impl std::error::Error for MyAnyhowError {}
+
 impl RateLimited {
   pub async fn wrap<T, E>(
     self,
@@ -62,11 +95,11 @@ impl RateLimited {
     fut: impl Future<Output = Result<T, E>>,
   ) -> Result<T, E>
   where
-    E: From<failure::Error>,
+    E: From<MyAnyhowError>,
   {
     let rate_limit: RateLimitConfig = actix_web::web::block(move || {
       // needs to be in a web::block because the RwLock in settings is from stdlib
-      Ok(Settings::get().rate_limit) as Result<_, failure::Error>
+      Ok(Settings::get().rate_limit) as Result<_, anyhow::Error>
     })
     .await
     .map_err(|e| match e {
@@ -164,7 +197,6 @@ where
     })
   }
 }
-
 type FutResult<T, E> = dyn Future<Output = Result<T, E>>;
 
 impl<S> Service for RateLimitedMiddleware<S>
